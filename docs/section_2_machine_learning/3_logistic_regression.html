@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>5_algorithms</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>3_logistic_regression</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14243,35 +14243,42 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="5.-&#12450;&#12523;&#12468;&#12522;&#12474;&#12512;">5. &#12450;&#12523;&#12468;&#12522;&#12474;&#12512;<a class="anchor-link" href="#5.-&#12450;&#12523;&#12468;&#12522;&#12474;&#12512;">&#182;</a></h1>
+<h1 id="3.-&#12525;&#12472;&#12473;&#12486;&#12451;&#12483;&#12463;&#22238;&#24112;">3. &#12525;&#12472;&#12473;&#12486;&#12451;&#12483;&#12463;&#22238;&#24112;<a class="anchor-link" href="#3.-&#12525;&#12472;&#12473;&#12486;&#12451;&#12483;&#12463;&#22238;&#24112;">&#182;</a></h1>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="5-1.-&#35201;&#32004;">5-1. &#35201;&#32004;<a class="anchor-link" href="#5-1.-&#35201;&#32004;">&#182;</a></h2>
+<h2 id="3-1.-&#35201;&#32004;">3-1. &#35201;&#32004;<a class="anchor-link" href="#3-1.-&#35201;&#32004;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>アルゴリズムというタイトルだが, ここでは $k$-meansを扱う.</p>
-<p>$k$-meansはクラスタリングのアルゴリズムである. $k$ はクラスタ数だが事前に人が決めなければならない. 
-最初はデータから $k$ 個の代表点をランダムに選び, そのどれかに各データ点を所属させる. 
-この割り当ての際は最も近い点を選ぶ. 
-次に $k$ 個の代表点ごとに所属するデータ点の重心を求める. 
-このようにして得られた $k$ 個の重心を次の代表点として今までの計算を繰り返す.
-収束判定は通常, 代表点までの距離の総和の変化量で行う（閾値より小さくなった場合に収束と判定）.</p>
-<p>$k$-meansは初期値（最初に選んだ点）によっては上手くクラスタリングできないことがある. 2007年に提案された$k$-means++ というアルゴリズムではこの点を改良している. なお, $k$ の値を評価する方法も提案されており, Puseudo F(Calinski and Harabasz, 1974)などがある.</p>
+<p>ロジスティック回帰では説明変数にシグモイド関数
+$$
+\mathrm{sigmoid}(x) = \frac{1}{1+e^{-w\cdot x}}
+$$
+を適用した値を $\{0, 1\}$-分類問題のクラス $1$ に属する確率とみなす.
+ここで指数関数の肩の上は入力データとパラメータの線形結合（内積）であり, 
+定数項は $x$ の成分のひとつに含まれていると考えることができる.</p>
+<p>機械学習としてはシグモイド関数を学習モデルとし, 損失関数を交差エントロピーとしたものと考えることができる. 学習パラメータは $w$ である.</p>
+<p>また, 一般化線形モデルという枠組みではリンク関数が以下のロジット関数の場合に相当する.
+$$
+\begin{equation*}
+\mathrm{logit}(p) = \ln{\frac{p}{1-p}}
+\end{equation*}
+$$
+確率ではなく分類クラスを与えたい場合は, $p=\frac{1}{2}$ を決定境界面とすることが多い. 境界面は $w\cdot x = 0$ なる $x$ からなる平面である.</p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="5-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">5-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#5-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
+<h2 id="3-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">3-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#3-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><img src="../image/skl_kmeans_last.png" alt="skl_kmeans_last.png"></p>
+<p><img src="./image/skl_logistic_regression_last.png" alt="skl_logistic_regression_last.png"></p>
 
 </div>
 </div>

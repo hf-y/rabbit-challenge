@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>2_non_linear_regression</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>4_principal_component_analysis</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14243,29 +14243,30 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="2.-&#38750;&#32218;&#24418;&#22238;&#24112;">2. &#38750;&#32218;&#24418;&#22238;&#24112;<a class="anchor-link" href="#2.-&#38750;&#32218;&#24418;&#22238;&#24112;">&#182;</a></h1>
+<h1 id="4.-&#20027;&#25104;&#20998;&#20998;&#26512;">4. &#20027;&#25104;&#20998;&#20998;&#26512;<a class="anchor-link" href="#4.-&#20027;&#25104;&#20998;&#20998;&#26512;">&#182;</a></h1>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="2-1.-&#35201;&#32004;">2-1. &#35201;&#32004;<a class="anchor-link" href="#2-1.-&#35201;&#32004;">&#182;</a></h2>
+<h2 id="4-1.-&#35201;&#32004;">4-1. &#35201;&#32004;<a class="anchor-link" href="#4-1.-&#35201;&#32004;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>講義では非線形回帰として基底関数の線形結合を学習モデルとする場合（基底関数展開）を取り扱った. 結合係数が学習パラメータである. 一般に入力に対して基底関数は非線形だが, 学習パラメータについては線形である（linear-in-parameter）.</p>
-<p>この回では正則化も扱い, Rige 回帰（$L^{2}$ 正則化）と Lasso（$L^{1}$ 正則化）に簡単に触れた.</p>
+<p>主成分分析とはデータを主成分に分解することである. 主成分とはデータの散らばり（分散）が最も大きな方向にデータを射影した値である. 最初に得られた主成分（第一主成分）に直行する方向に射影したデータで同じ操作を行い, 次々と第二主成分, 第三主成分を得ることができる.</p>
+<p>これは分散共分散行列の固有値分解に対応し, 主成分の順序は固有値の大きさに対応する. また固有値に対応する固有ベクトルが当該主成分の方向を定める.</p>
+<p>データの次元を $n$ とするとき, 第 $n$ 主成分まで考慮すると元のデータを復元できる. 通常は適当な成分までにとどめてデータの次元圧縮に用いる.</p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="2-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">2-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#2-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
+<h2 id="4-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">4-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#4-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><img src="../image/skl_nonlinear_regression_last.png" alt="skl_nonlinear_regression_last.png"></p>
+<p><img src="./image/skl_pca_last.png" alt="skl_pca_last.png"></p>
 
 </div>
 </div>

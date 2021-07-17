@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_linear_regression</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>5_algorithms</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14243,30 +14243,35 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="1.-&#32218;&#24418;&#22238;&#24112;">1. &#32218;&#24418;&#22238;&#24112;<a class="anchor-link" href="#1.-&#32218;&#24418;&#22238;&#24112;">&#182;</a></h1>
+<h1 id="5.-&#12450;&#12523;&#12468;&#12522;&#12474;&#12512;">5. &#12450;&#12523;&#12468;&#12522;&#12474;&#12512;<a class="anchor-link" href="#5.-&#12450;&#12523;&#12468;&#12522;&#12474;&#12512;">&#182;</a></h1>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-1.-&#35201;&#32004;">1-1. &#35201;&#32004;<a class="anchor-link" href="#1-1.-&#35201;&#32004;">&#182;</a></h2>
+<h2 id="5-1.-&#35201;&#32004;">5-1. &#35201;&#32004;<a class="anchor-link" href="#5-1.-&#35201;&#32004;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>データを直線で近似することは機械学習という概念が明確になる以前から行われてきたが, これを学習器を１次式に, 損失関数を MSE にとった場合の回帰問題として定式化できる. 線形回帰ではよく知られているように最小二乗法の結果として, 学習パラメータ（1次式の係数）をデータで解析的に表現できる.</p>
-<p>説明変数に値 $1$ をとる成分を追加すると, 定数項（１次式の切片）を含めて結果を訓練データを並べた行列（デザイン行列）を使って書くことができる. 特に興味深いのはフルランクでない場合で, Moor-Penroseの一般化逆行列が登場する.</p>
+<p>アルゴリズムというタイトルだが, ここでは $k$-meansを扱う.</p>
+<p>$k$-meansはクラスタリングのアルゴリズムである. $k$ はクラスタ数だが事前に人が決めなければならない. 
+最初はデータから $k$ 個の代表点をランダムに選び, そのどれかに各データ点を所属させる. 
+この割り当ての際は最も近い点を選ぶ. 
+次に $k$ 個の代表点ごとに所属するデータ点の重心を求める. 
+このようにして得られた $k$ 個の重心を次の代表点として今までの計算を繰り返す.
+収束判定は通常, 代表点までの距離の総和の変化量で行う（閾値より小さくなった場合に収束と判定）.</p>
+<p>$k$-meansは初期値（最初に選んだ点）によっては上手くクラスタリングできないことがある. 2007年に提案された$k$-means++ というアルゴリズムではこの点を改良している. なお, $k$ の値を評価する方法も提案されており, Puseudo F(Calinski and Harabasz, 1974)などがある.</p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">1-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#1-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
+<h2 id="5-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">5-2. &#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;<a class="anchor-link" href="#5-2.-&#23455;&#35013;&#28436;&#32722;&#23455;&#26045;&#32080;&#26524;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><img src="../image/skl_regression_first.png" alt="skl_regression_first.png"></p>
-<p><img src="../image/skl_regression_last.png" alt="skl_regression_last.png"></p>
+<p><img src="./image/skl_kmeans_last.png" alt="skl_kmeans_last.png"></p>
 
 </div>
 </div>
