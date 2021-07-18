@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_1_forward_propagation_after</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>2_7_double_comvolution_network_after</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14263,7 +14263,7 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="import&#12392;&#38306;&#25968;&#23450;&#32681;">import&#12392;&#38306;&#25968;&#23450;&#32681;<a class="anchor-link" href="#import&#12392;&#38306;&#25968;&#23450;&#32681;">&#182;</a></h1>
+<h1 id="double_comvolution_network">double_comvolution_network<a class="anchor-link" href="#double_comvolution_network">&#182;</a></h1>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs  ">
 <div class="jp-Cell-inputWrapper">
@@ -14271,14 +14271,89 @@ a.anchor-link {
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[2]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">functions</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">layers</span>
+<span class="kn">from</span> <span class="nn">common</span> <span class="kn">import</span> <span class="n">optimizer</span>
+<span class="kn">from</span> <span class="nn">data.mnist</span> <span class="kn">import</span> <span class="n">load_mnist</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="k">def</span> <span class="nf">print_vec</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">vec</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*** &quot;</span> <span class="o">+</span> <span class="n">text</span> <span class="o">+</span> <span class="s2">&quot; ***&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;shape: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">vec</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DoubleConvNet</span><span class="p">:</span>
+    <span class="c1"># conv - relu - conv - relu - pool - affine - relu - affine - softmax</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">),</span>
+                 <span class="n">conv_param_1</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filter_num&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;filter_size&#39;</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;stride&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+                 <span class="n">conv_param_2</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filter_num&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;filter_size&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;stride&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+                 <span class="n">hidden_size</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">weight_init_std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+        <span class="n">conv_output_size_1</span> <span class="o">=</span> <span class="p">(</span><span class="n">input_dim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;pad&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;stride&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">conv_output_size_2</span> <span class="o">=</span> <span class="p">(</span><span class="n">conv_output_size_1</span> <span class="o">-</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;pad&#39;</span><span class="p">])</span> <span class="o">/</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;stride&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>        
+        <span class="n">pool_output_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">conv_output_size_2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">conv_output_size_2</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>        
+        <span class="c1"># 重みの初期化</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_init_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">],</span> <span class="n">input_dim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">],</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_init_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">],</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">],</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">],</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_size&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;filter_num&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_init_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">pool_output_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_init_std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">output_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">output_size</span><span class="p">)</span>
+        <span class="c1"># レイヤの生成</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Convolution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;stride&#39;</span><span class="p">],</span> <span class="n">conv_param_1</span><span class="p">[</span><span class="s1">&#39;pad&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Relu1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Relu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Convolution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">],</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;stride&#39;</span><span class="p">],</span> <span class="n">conv_param_2</span><span class="p">[</span><span class="s1">&#39;pad&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Relu2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Relu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Pool1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Pooling</span><span class="p">(</span><span class="n">pool_h</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool_w</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Relu3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Relu</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">Affine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;W4&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;b4&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_layer</span> <span class="o">=</span> <span class="n">layers</span><span class="o">.</span><span class="n">SoftmaxWithLoss</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+        
+    <span class="k">def</span> <span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_layer</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">acc</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">batch_size</span><span class="p">)):</span>
+            <span class="n">tx</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">batch_size</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">td</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">batch_size</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">batch_size</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">tx</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">acc</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="n">td</span><span class="p">)</span> 
+        
+        <span class="k">return</span> <span class="n">acc</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="c1"># forward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+        
+        <span class="c1"># backward</span>
+        <span class="n">dout</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">dout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_layer</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">dout</span><span class="p">)</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        
+        <span class="n">layers</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="n">dout</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">dout</span><span class="p">)</span>
+
+        <span class="c1"># 設定</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dW</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">db</span>
+        <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">],</span> <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dW</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Conv2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">db</span>        
+        <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">],</span> <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dW</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">db</span>
+        <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;W4&#39;</span><span class="p">],</span> <span class="n">grad</span><span class="p">[</span><span class="s1">&#39;b4&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">dW</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="s1">&#39;Affine2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">db</span>
+
+        <span class="k">return</span> <span class="n">grad</span>
 </pre></div>
 
      </div>
@@ -14286,514 +14361,71 @@ a.anchor-link {
 </div>
 </div>
 
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#21336;&#12518;&#12491;&#12483;&#12488;&#65289;">&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#21336;&#12518;&#12491;&#12483;&#12488;&#65289;<a class="anchor-link" href="#&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#21336;&#12518;&#12491;&#12483;&#12488;&#65289;">&#182;</a></h1>
-</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
 <div class="jp-Cell-inputWrapper">
 <div class="jp-InputArea jp-Cell-inputArea">
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[3]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 順伝播（単層・単ユニット）</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># データの読み込み</span>
+<span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">d_train</span><span class="p">),</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">d_test</span><span class="p">)</span> <span class="o">=</span> <span class="n">load_mnist</span><span class="p">(</span><span class="n">flatten</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="c1"># 重み</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">]])</span>
-
-<span class="c1">## 試してみよう_配列の初期化</span>
-<span class="c1">#W = np.zeros(2)</span>
-<span class="c1">#W = np.ones(2)</span>
-<span class="c1">#W = np.random.rand(2)</span>
-<span class="c1">#W = np.random.randint(5, size=(2))</span>
-
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み&quot;</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;データ読み込み完了&quot;</span><span class="p">)</span>
+<span class="c1"># 処理に時間のかかる場合はデータを削減 </span>
+<span class="n">x_train</span><span class="p">,</span> <span class="n">d_train</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[:</span><span class="mi">5000</span><span class="p">],</span> <span class="n">d_train</span><span class="p">[:</span><span class="mi">5000</span><span class="p">]</span>
+<span class="n">x_test</span><span class="p">,</span> <span class="n">d_test</span> <span class="o">=</span> <span class="n">x_test</span><span class="p">[:</span><span class="mi">1000</span><span class="p">],</span> <span class="n">d_test</span><span class="p">[:</span><span class="mi">1000</span><span class="p">]</span>
 
 
-<span class="c1"># バイアス</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">network</span> <span class="o">=</span> <span class="n">DoubleConvNet</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">28</span><span class="p">),</span> 
+                          <span class="n">conv_param_1</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filter_num&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;filter_size&#39;</span><span class="p">:</span><span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;stride&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+                          <span class="n">conv_param_2</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;filter_num&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;filter_size&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;pad&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;stride&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">},</span>
+                          <span class="n">hidden_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">output_size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">weight_init_std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
-<span class="c1">## 試してみよう_数値の初期化</span>
-<span class="c1">#b = np.random.rand() # 0~1のランダム数値</span>
-<span class="c1">#b = np.random.rand() * 10 -5  # -5~5のランダム数値</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span><span class="o">.</span><span class="n">Adam</span><span class="p">()</span>
 
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス&quot;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="c1"># 時間がかかるため100に設定</span>
+<span class="n">iters_num</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="c1"># iters_num = 1000</span>
+<span class="n">train_size</span> <span class="o">=</span> <span class="n">x_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">100</span>
 
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;入力&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="n">train_loss_list</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">accuracies_train</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">accuracies_test</span> <span class="o">=</span> <span class="p">[]</span>
 
-
-<span class="c1"># 総入力</span>
-<span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力&quot;</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
-
-<span class="c1"># 中間層出力</span>
-<span class="n">z</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力&quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
+<span class="n">plot_interval</span><span class="o">=</span><span class="mi">10</span>
 
 
-<div class="jp-OutputArea jp-Cell-outputArea">
 
-<div class="jp-OutputArea-child">
-
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iters_num</span><span class="p">):</span>
+    <span class="n">batch_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">train_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
+    <span class="n">x_batch</span> <span class="o">=</span> <span class="n">x_train</span><span class="p">[</span><span class="n">batch_mask</span><span class="p">]</span>
+    <span class="n">d_batch</span> <span class="o">=</span> <span class="n">d_train</span><span class="p">[</span><span class="n">batch_mask</span><span class="p">]</span>
     
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>*** 重み ***
-[[0.1]
- [0.2]]
-shape: (2, 1)
-
-*** バイアス ***
-0.5
-shape: ()
-
-*** 入力 ***
-[2 3]
-shape: (2,)
-
-*** 総入力 ***
-[1.3]
-shape: (1,)
-
-*** 中間層出力 ***
-[1.3]
-shape: (1,)
-
-</pre>
-</div>
-</div>
-
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;">&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;<a class="anchor-link" href="#&#38918;&#20253;&#25773;&#65288;&#21336;&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;">&#182;</a></h1>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[4]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 順伝播（単層・複数ユニット）</span>
-
-<span class="c1"># 重み</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-    <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> 
-    <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> 
-    <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
-<span class="p">])</span>
-
-<span class="c1">## 試してみよう_配列の初期化</span>
-<span class="c1">#W = np.zeros((4,3))</span>
-<span class="c1">#W = np.ones((4,3))</span>
-<span class="c1">#W = np.random.rand(4,3)</span>
-<span class="c1">#W = np.random.randint(5, size=(4,3))</span>
-
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み&quot;</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
-
-<span class="c1"># バイアス</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス&quot;</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">])</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;入力&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-
-<span class="c1">#  総入力</span>
-<span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力&quot;</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
-
-<span class="c1"># 中間層出力</span>
-<span class="n">z</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力&quot;</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>*** 重み ***
-[[0.1 0.2 0.3 0. ]
- [0.2 0.3 0.4 0.5]
- [0.3 0.4 0.5 1. ]]
-shape: (3, 4)
-
-*** バイアス ***
-[0.1 0.2 0.3]
-shape: (3,)
-
-*** 入力 ***
-[ 1.  5.  2. -1.]
-shape: (4,)
-
-*** 総入力 ***
-[1.8 2.2 2.6]
-shape: (3,)
-
-*** 中間層出力 ***
-[0.85814894 0.90024951 0.93086158]
-shape: (3,)
-
-</pre>
-</div>
-</div>
-
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="&#38918;&#20253;&#25773;&#65288;3&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;">&#38918;&#20253;&#25773;&#65288;3&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;<a class="anchor-link" href="#&#38918;&#20253;&#25773;&#65288;3&#23652;&#12539;&#35079;&#25968;&#12518;&#12491;&#12483;&#12488;&#65289;">&#182;</a></h1>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[5]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 順伝播（3層・複数ユニット）</span>
-
-<span class="c1"># ウェイトとバイアスを設定</span>
-<span class="c1"># ネートワークを作成</span>
-<span class="k">def</span> <span class="nf">init_network</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### ネットワークの初期化 #####&quot;</span><span class="p">)</span>
-    <span class="n">network</span> <span class="o">=</span> <span class="p">{}</span>
-    
-    <span class="n">input_layer_size</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">hidden_layer_size_1</span><span class="o">=</span><span class="mi">10</span>
-    <span class="n">hidden_layer_size_2</span><span class="o">=</span><span class="mi">5</span>
-    <span class="n">output_layer_size</span> <span class="o">=</span> <span class="mi">4</span>
-    
-    <span class="c1">#試してみよう</span>
-    <span class="c1">#_各パラメータのshapeを表示</span>
-    <span class="c1">#_ネットワークの初期値ランダム生成</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">input_layer_size</span><span class="p">,</span> <span class="n">hidden_layer_size_1</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size_1</span><span class="p">,</span><span class="n">hidden_layer_size_2</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size_2</span><span class="p">,</span><span class="n">output_layer_size</span><span class="p">)</span>
-
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size_1</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size_2</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">output_layer_size</span><span class="p">)</span>
-
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み3&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス3&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span> <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">network</span>
-
-<span class="c1"># プロセスを作成</span>
-<span class="c1"># x：入力値</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### 順伝播開始 #####&quot;</span><span class="p">)</span>
-
-    <span class="n">W1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span>
-    <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">b3</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span>
-    
-    <span class="c1"># 1層の総入力</span>
-    <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b1</span>
-    
-    <span class="c1"># 1層の総出力</span>
-    <span class="n">z1</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
-    
-    <span class="c1"># 2層の総入力</span>
-    <span class="n">u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b2</span>
-    
-    <span class="c1"># 2層の総出力</span>
-    <span class="n">z2</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span>
-
-    <span class="c1"># 出力層の総入力</span>
-    <span class="n">u3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z2</span><span class="p">,</span> <span class="n">W3</span><span class="p">)</span> <span class="o">+</span> <span class="n">b3</span>
-    
-    <span class="c1"># 出力層の総出力</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">u3</span>
-    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力1&quot;</span><span class="p">,</span> <span class="n">u1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力1&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力2&quot;</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力2&quot;</span><span class="p">,</span> <span class="n">u2</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;出力合計: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
-
-    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span>
-
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">])</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;入力&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-
-<span class="c1"># ネットワークの初期化</span>
-<span class="n">network</span> <span class="o">=</span>  <span class="n">init_network</span><span class="p">()</span>
-
-<span class="n">y</span><span class="p">,</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>*** 入力 ***
-[1. 2. 4.]
-shape: (3,)
-
-##### ネットワークの初期化 #####
-*** 重み1 ***
-[[0.03435312 0.55079127 0.56147672 0.02830729 0.55576015 0.20480483
-  0.22926192 0.65048646 0.23101415 0.23113709]
- [0.36599765 0.64296462 0.1596502  0.69419665 0.43514669 0.78372173
-  0.79975272 0.93123271 0.33499815 0.03200962]
- [0.83635693 0.38916157 0.10960213 0.09250667 0.7292283  0.44512829
-  0.69168975 0.07117643 0.45837056 0.75927917]]
-shape: (3, 10)
-
-*** 重み2 ***
-[[0.34087332 0.98773351 0.59441856 0.95673023 0.13949489]
- [0.87909488 0.18352815 0.70595691 0.93318964 0.79072023]
- [0.02547618 0.10644493 0.62113354 0.23032111 0.72275293]
- [0.00834451 0.07731712 0.95516277 0.26890115 0.64712257]
- [0.17038469 0.08242924 0.63350086 0.70237266 0.29958765]
- [0.84759895 0.40859734 0.23626177 0.48092422 0.85151703]
- [0.28228381 0.15910624 0.14045293 0.20627072 0.11876557]
- [0.7670653  0.87481169 0.00875151 0.0224584  0.75668788]
- [0.47257019 0.58796237 0.51856921 0.94600423 0.26638176]
- [0.39172609 0.03825297 0.67081617 0.48981553 0.16494794]]
-shape: (10, 5)
-
-*** 重み3 ***
-[[0.32477145 0.72071246 0.50697656 0.87480312]
- [0.02122222 0.22722096 0.68433709 0.16515401]
- [0.47606688 0.65270159 0.2594595  0.41466383]
- [0.5688057  0.93058568 0.64751585 0.55070639]
- [0.5184821  0.11438987 0.38847904 0.39839798]]
-shape: (5, 4)
-
-*** バイアス1 ***
-[0.38454776 0.35725278 0.54061857 0.84150867 0.88900779 0.88039942
- 0.03787989 0.05075466 0.79992291 0.04713093]
-shape: (10,)
-
-*** バイアス2 ***
-[0.05664398 0.19370473 0.16277674 0.67601142 0.09489979]
-shape: (5,)
-
-*** バイアス3 ***
-[0.89304748 0.98030351 0.61656027 0.14345036]
-shape: (4,)
-
-##### 順伝播開始 #####
-*** 総入力1 ***
-[4.4963239  3.75061957 1.85980423 2.62823592 5.2319745  4.43316088
- 4.63340626 2.84841226 3.53441562 3.37940393]
-shape: (10,)
-
-*** 中間層出力1 ***
-[4.4963239  3.75061957 1.85980423 2.62823592 5.2319745  4.43316088
- 4.63340626 2.84841226 3.53441562 3.37940393]
-shape: (10,)
-
-*** 中間層出力2 ***
-[16.09168804 13.40344237 18.28617885 21.43828132 16.27969916]
-shape: (5,)
-
-*** 総入力2 ***
-[16.09168804 13.40344237 18.28617885 21.43828132 16.27969916]
-shape: (5,)
-
-*** 出力 ***
-[35.74401252 49.37113478 42.8976133  42.30875624]
-shape: (4,)
-
-出力合計: 170.32151683549785
-</pre>
-</div>
-</div>
-
-</div>
-
-</div>
-
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[6]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
-
-
-
-
-<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain">
-<pre>array([[0.61218222, 0.71612464, 0.99552002],
-       [0.62829889, 0.83483961, 0.23897676],
-       [0.28958444, 0.12189738, 0.87830015]])</pre>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="&#22810;&#12463;&#12521;&#12473;&#20998;&#39006;&#65288;2-3-4&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">&#22810;&#12463;&#12521;&#12473;&#20998;&#39006;&#65288;2-3-4&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;<a class="anchor-link" href="#&#22810;&#12463;&#12521;&#12473;&#20998;&#39006;&#65288;2-3-4&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">&#182;</a></h1>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[7]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 多クラス分類</span>
-<span class="c1"># 2-3-4ネットワーク</span>
-
-<span class="c1"># ！試してみよう_ノードの構成を 3-5-6 に変更してみよう</span>
-
-<span class="c1"># ウェイトとバイアスを設定</span>
-<span class="c1"># ネートワークを作成</span>
-<span class="k">def</span> <span class="nf">init_network</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### ネットワークの初期化 #####&quot;</span><span class="p">)</span>
-
-    <span class="c1">#試してみよう</span>
-    <span class="c1">#_各パラメータのshapeを表示</span>
-    <span class="c1">#_ネットワークの初期値ランダム生成</span>
-
-    <span class="n">network</span> <span class="o">=</span> <span class="p">{}</span>
-    
-    <span class="n">input_layer_size</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">hidden_layer_size</span><span class="o">=</span><span class="mi">50</span>
-    <span class="n">output_layer_size</span> <span class="o">=</span> <span class="mi">6</span>
-    
-    <span class="c1">#試してみよう</span>
-    <span class="c1">#_各パラメータのshapeを表示</span>
-    <span class="c1">#_ネットワークの初期値ランダム生成</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">input_layer_size</span><span class="p">,</span> <span class="n">hidden_layer_size</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size</span><span class="p">,</span><span class="n">output_layer_size</span><span class="p">)</span>
-
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">output_layer_size</span><span class="p">)</span>
-    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">network</span>
-
-<span class="c1"># プロセスを作成</span>
-<span class="c1"># x：入力値</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### 順伝播開始 #####&quot;</span><span class="p">)</span>
-    <span class="n">W1</span><span class="p">,</span> <span class="n">W2</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span>
-    <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span>
-    
-    <span class="c1"># 1層の総入力</span>
-    <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b1</span>
-
-    <span class="c1"># 1層の総出力</span>
-    <span class="n">z1</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
-
-    <span class="c1"># 2層の総入力</span>
-    <span class="n">u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b2</span>
-    
-    <span class="c1"># 出力値</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span>
-    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力1&quot;</span><span class="p">,</span> <span class="n">u1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力1&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力2&quot;</span><span class="p">,</span> <span class="n">u2</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;出力合計: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">x_batch</span><span class="p">,</span> <span class="n">d_batch</span><span class="p">)</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">network</span><span class="o">.</span><span class="n">params</span><span class="p">,</span> <span class="n">grad</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x_batch</span><span class="p">,</span> <span class="n">d_batch</span><span class="p">)</span>
+    <span class="n">train_loss_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">plot_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">accr_train</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">accuracy</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">d_train</span><span class="p">)</span>
+        <span class="n">accr_test</span> <span class="o">=</span> <span class="n">network</span><span class="o">.</span><span class="n">accuracy</span><span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">d_test</span><span class="p">)</span>
+        <span class="n">accuracies_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accr_train</span><span class="p">)</span>
+        <span class="n">accuracies_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accr_test</span><span class="p">)</span>
         
-    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">z1</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Generation: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;. 正答率(トレーニング) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">accr_train</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;                : &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;. 正答率(テスト) = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">accr_test</span><span class="p">))</span>               
 
-<span class="c1">## 事前データ</span>
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span>  <span class="mf">3.</span><span class="p">])</span>
-
-<span class="c1"># 目標出力</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-
-<span class="c1"># ネットワークの初期化</span>
-<span class="n">network</span> <span class="o">=</span>  <span class="n">init_network</span><span class="p">()</span>
-
-<span class="c1"># 出力</span>
-<span class="n">y</span><span class="p">,</span> <span class="n">z1</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-
-<span class="c1"># 誤差</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">cross_entropy_error</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-<span class="c1">## 表示</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##### 結果表示 #####&quot;</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;訓練データ&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;交差エントロピー誤差&quot;</span><span class="p">,</span>  <span class="n">loss</span><span class="p">)</span>
+<span class="n">lists</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">iters_num</span><span class="p">,</span> <span class="n">plot_interval</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lists</span><span class="p">,</span> <span class="n">accuracies_train</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;training set&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lists</span><span class="p">,</span> <span class="n">accuracies_test</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="s2">&quot;test set&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower right&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;count&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;accuracy&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="c1"># グラフの表示</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 
      </div>
@@ -14813,305 +14445,30 @@ shape: (4,)
 
 
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>##### ネットワークの初期化 #####
-*** 重み1 ***
-[[0.54016208 0.32403005 0.89427972 0.35017349 0.15272602 0.81226877
-  0.6453794  0.58855493 0.87588428 0.82131851 0.99685241 0.58259318
-  0.36739597 0.99219174 0.17249308 0.15422532 0.51245705 0.15650206
-  0.50492538 0.84222139 0.34330604 0.86504102 0.48307122 0.03579007
-  0.34766346 0.76220987 0.39562719 0.0953883  0.19329037 0.12566315
-  0.15513655 0.25817297 0.99805641 0.37851193 0.33477116 0.44976308
-  0.27289153 0.53196451 0.6203696  0.42826314 0.64795459 0.0694392
-  0.32103523 0.52908503 0.57055036 0.65480589 0.49856738 0.2270072
-  0.30103652 0.1220855 ]
- [0.18330989 0.65772493 0.37674987 0.35731262 0.81508777 0.87324802
-  0.90717017 0.66589328 0.56430121 0.21761065 0.37039009 0.29121003
-  0.00286959 0.9643434  0.29548592 0.65221647 0.9039623  0.97606693
-  0.89523516 0.23002082 0.97756353 0.66419622 0.63969078 0.21410377
-  0.91964553 0.31781363 0.81743205 0.7267425  0.77923877 0.62087413
-  0.6154018  0.34412669 0.22527069 0.02851786 0.12300645 0.1724643
-  0.03708556 0.799409   0.65155948 0.68792275 0.94359121 0.66214387
-  0.62791254 0.90292451 0.81687479 0.64979501 0.70295849 0.79306683
-  0.88783477 0.65770438]
- [0.69620282 0.91011284 0.3423165  0.0573153  0.97472458 0.11031079
-  0.85557061 0.56089295 0.11375793 0.64901446 0.35400368 0.44196541
-  0.5516313  0.21705485 0.50329106 0.67628787 0.23479207 0.41556458
-  0.24747146 0.01542889 0.26727167 0.46222549 0.9895792  0.8330648
-  0.91865539 0.64122361 0.52247288 0.05199176 0.26305961 0.11547384
-  0.90854048 0.95981474 0.31997623 0.00569476 0.64730961 0.41354428
-  0.32809202 0.06545089 0.79031162 0.92226656 0.36635441 0.14082826
-  0.09165178 0.15572564 0.4129208  0.79353037 0.13807551 0.38429074
-  0.96575283 0.54675045]]
-shape: (3, 50)
-
-*** 重み2 ***
-[[1.32925460e-01 6.03437909e-01 5.80178120e-01 5.79885014e-01
-  2.18785273e-02 8.15080886e-01]
- [8.59042329e-01 1.30272625e-01 1.07852296e-01 2.11371175e-01
-  9.17457192e-01 2.16987173e-01]
- [7.89690997e-01 4.93232476e-01 7.10634387e-01 8.10257785e-01
-  5.42407475e-01 3.38238089e-01]
- [2.23653559e-01 5.15783536e-01 4.74630030e-01 7.28585657e-01
-  2.16268599e-01 9.22701421e-01]
- [7.27307457e-01 3.34590910e-01 1.20879973e-01 5.18239384e-01
-  8.89883060e-02 5.63941094e-01]
- [7.50202281e-01 5.30743872e-01 8.66539889e-01 1.16542897e-01
-  7.68998750e-01 9.12877957e-01]
- [6.61890015e-01 3.04403660e-01 4.94949213e-01 3.23487054e-01
-  9.12934123e-01 5.41417988e-01]
- [5.22798244e-01 6.18369250e-01 7.48087577e-01 9.85775850e-01
-  3.56691058e-01 7.51946746e-04]
- [7.57241998e-03 3.49795017e-01 4.61857073e-02 5.51627860e-01
-  7.36992639e-01 6.21861705e-01]
- [3.12732086e-01 8.90075129e-01 7.99545218e-01 2.64948022e-01
-  7.76058103e-01 3.13628596e-01]
- [8.63811101e-01 5.03333706e-01 7.46167486e-01 2.70505056e-01
-  2.86122300e-01 4.10284038e-01]
- [6.55507198e-01 3.18701356e-01 7.27322531e-01 6.87778346e-01
-  5.95284154e-01 2.82900769e-01]
- [8.69983684e-01 6.81469964e-01 9.05590844e-01 6.85276462e-01
-  1.65474840e-01 9.95720016e-01]
- [4.76136914e-01 7.34669594e-01 9.71926526e-02 9.73794725e-01
-  8.36847101e-01 6.45355940e-02]
- [7.92744049e-01 2.66374755e-01 3.26065645e-01 9.58511878e-01
-  2.11846068e-01 8.41852738e-01]
- [9.57525702e-01 8.06968562e-01 6.17934113e-01 3.99779475e-01
-  3.64595252e-01 6.29861756e-01]
- [7.06833538e-01 9.60189725e-01 4.32983338e-01 5.40346372e-02
-  7.01610582e-01 1.72737303e-01]
- [4.76770631e-01 9.11145071e-02 2.26921113e-01 9.35683688e-01
-  6.62877813e-01 4.29851602e-01]
- [6.28363890e-01 1.37970878e-01 8.18819524e-01 6.70421657e-01
-  7.72323946e-03 7.13932546e-01]
- [3.26168104e-01 9.14019215e-01 9.35157325e-01 4.58457172e-01
-  5.11366643e-01 6.36464308e-01]
- [2.75270836e-01 7.48369879e-01 9.79905920e-01 8.92110249e-01
-  8.29790780e-01 4.20384884e-01]
- [6.16670903e-01 5.42181060e-01 9.21560865e-01 8.24789419e-01
-  9.00317165e-01 9.30077754e-01]
- [6.04430086e-01 1.53295835e-01 3.87230152e-01 1.36126266e-01
-  8.56155289e-01 4.90012459e-02]
- [8.13373724e-01 7.85370798e-03 7.18085856e-01 6.98455827e-02
-  6.19190105e-01 7.07188601e-01]
- [4.55938394e-01 2.24226151e-01 3.17888954e-01 7.28364570e-01
-  5.90888208e-01 4.00061914e-01]
- [6.83041548e-01 6.46909213e-01 3.99277501e-01 6.99984745e-01
-  2.17092885e-01 5.36612472e-01]
- [9.54567452e-01 2.40740396e-02 8.70303520e-01 4.54779029e-01
-  1.08999955e-01 3.53427682e-01]
- [9.91658481e-01 6.84988653e-01 9.16482653e-01 7.61092893e-01
-  8.08576216e-01 5.72984246e-01]
- [5.54135479e-01 8.78982986e-01 1.58944447e-02 3.80720514e-02
-  2.81852578e-01 6.45137112e-02]
- [7.03643094e-01 2.86737902e-01 2.58925037e-02 1.21158664e-01
-  1.53559883e-01 2.27072045e-02]
- [8.39855011e-01 9.95269169e-01 4.22628512e-01 6.83133531e-01
-  3.31797385e-01 5.11893526e-01]
- [1.11179509e-01 3.30951729e-01 5.25409739e-01 2.91694507e-01
-  4.59424900e-01 4.25787533e-01]
- [8.01798068e-01 8.68551278e-01 9.85400928e-02 5.70546524e-02
-  9.83369447e-02 7.78990903e-01]
- [5.56037179e-01 7.74079423e-02 8.67483858e-01 8.42305586e-01
-  9.65104964e-01 5.31572696e-01]
- [8.48934219e-01 9.25245688e-01 8.69621665e-01 1.29914403e-01
-  1.18036060e-01 5.93387448e-01]
- [3.46253912e-02 1.74967997e-01 1.30686102e-01 5.01823162e-01
-  7.86657633e-01 4.75178583e-01]
- [9.07144743e-01 4.29250966e-01 8.24356778e-01 7.58053916e-01
-  4.50852046e-01 9.42400320e-01]
- [1.86871796e-01 3.72225786e-01 5.26509368e-01 9.48297946e-01
-  6.81701721e-01 5.16973133e-01]
- [3.73609534e-01 8.56397612e-01 4.29059001e-01 3.77735321e-01
-  6.09322719e-01 6.77213650e-01]
- [5.32594494e-01 3.21748371e-01 6.30879913e-01 6.82868031e-01
-  3.88077730e-01 4.56888268e-01]
- [2.21440803e-01 1.58146420e-01 8.99075711e-01 1.67461525e-01
-  8.63216235e-01 1.26897718e-02]
- [7.86460768e-01 8.36155248e-01 7.22077741e-01 2.23817454e-01
-  6.44707915e-01 2.26223483e-01]
- [9.91861268e-01 6.18179170e-01 4.64154478e-01 6.67088897e-01
-  6.21160034e-01 8.54156607e-01]
- [3.52595166e-01 4.55871047e-01 8.32145775e-01 8.83133606e-01
-  5.49563748e-01 2.14350598e-02]
- [5.03201742e-01 1.09324818e-01 6.78508972e-01 4.79396894e-01
-  8.86228778e-01 9.69943014e-01]
- [4.58360907e-01 1.35422453e-01 9.11101709e-01 2.02296122e-01
-  3.46087787e-02 6.23258780e-01]
- [4.35957628e-01 9.29094788e-02 8.99443692e-01 3.26162218e-02
-  1.12405157e-01 4.73424610e-01]
- [3.45832517e-01 9.71299745e-01 4.63186159e-01 4.54202138e-01
-  1.92394763e-01 4.29313486e-01]
- [5.96453756e-01 3.75819849e-01 7.93606283e-01 7.36209647e-02
-  3.17263930e-01 3.81030953e-01]
- [7.61641225e-01 7.92449821e-01 9.84730289e-01 4.57532142e-01
-  4.08344175e-01 3.52195710e-01]]
-shape: (50, 6)
-
-*** バイアス1 ***
-[0.98268562 0.08574845 0.63477759 0.85272639 0.30098957 0.25914413
- 0.03187783 0.08330841 0.34641371 0.5091834  0.83004339 0.1234623
- 0.74564359 0.93312398 0.15413616 0.54070606 0.66954893 0.85082868
- 0.67754187 0.45768848 0.96748379 0.77696163 0.28642118 0.93573687
- 0.80835957 0.29203126 0.2676464  0.82257716 0.64023745 0.50577705
- 0.51899373 0.14011725 0.63679393 0.21384317 0.14685388 0.04758566
- 0.03719435 0.59062266 0.21551704 0.70131072 0.43848103 0.72851176
- 0.0782461  0.58381051 0.23026804 0.11765344 0.87618842 0.37361651
- 0.38729879 0.19895767]
-shape: (50,)
-
-*** バイアス2 ***
-[0.63755875 0.88554493 0.66229234 0.1802696  0.04277259 0.00866792]
-shape: (6,)
-
-##### 順伝播開始 #####
-*** 総入力1 ***
-[3.97807595 4.45556688 3.30950656 2.08947103 5.00806488 3.14884131
- 5.05830938 3.68632876 2.69217422 3.71276658 3.629687   2.61437176
- 2.77367262 4.50516707 2.42747426 4.02822792 3.69430678 4.20615833
- 3.71535195 1.80623819 4.0677319  4.35707155 5.01761157 3.89892886
- 5.75128026 3.61353923 3.86555632 2.52742573 3.18118417 2.21960997
- 4.63055534 3.96598782 3.04532043 0.66647509 2.66956676 2.08291017
- 1.36853305 2.91775784 4.50994045 5.27221905 4.07268128 2.54472346
- 1.93006177 3.38592148 3.67333037 4.45264047 3.1948993  3.3396296
- 5.36126333 3.27670328]
-shape: (50,)
-
-*** 中間層出力1 ***
-[3.97807595 4.45556688 3.30950656 2.08947103 5.00806488 3.14884131
- 5.05830938 3.68632876 2.69217422 3.71276658 3.629687   2.61437176
- 2.77367262 4.50516707 2.42747426 4.02822792 3.69430678 4.20615833
- 3.71535195 1.80623819 4.0677319  4.35707155 5.01761157 3.89892886
- 5.75128026 3.61353923 3.86555632 2.52742573 3.18118417 2.21960997
- 4.63055534 3.96598782 3.04532043 0.66647509 2.66956676 2.08291017
- 1.36853305 2.91775784 4.50994045 5.27221905 4.07268128 2.54472346
- 1.93006177 3.38592148 3.67333037 4.45264047 3.1948993  3.3396296
- 5.36126333 3.27670328]
-shape: (50,)
-
-*** 総入力2 ***
-[101.78940715  84.28060279 101.51377207  85.02268204  86.48355172
-  83.18027573]
-shape: (6,)
-
-*** 出力1 ***
-[5.68475682e-01 1.41492941e-08 4.31524141e-01 2.97177342e-08
- 1.28074697e-07 4.70835069e-09]
-shape: (6,)
-
-出力合計: 1.0
-
-##### 結果表示 #####
-*** 出力 ***
-[5.68475682e-01 1.41492941e-08 4.31524141e-01 2.97177342e-08
- 1.28074697e-07 4.70835069e-09]
-shape: (6,)
-
-*** 訓練データ ***
-[0 0 0 1 0 0]
-shape: (6,)
-
-*** 交差エントロピー誤差 ***
-15.857905022326136
-shape: ()
-
+<pre>データ読み込み完了
+Generation: 10. 正答率(トレーニング) = 0.2232
+                : 10. 正答率(テスト) = 0.237
+Generation: 20. 正答率(トレーニング) = 0.5216
+                : 20. 正答率(テスト) = 0.502
+Generation: 30. 正答率(トレーニング) = 0.7008
+                : 30. 正答率(テスト) = 0.674
+Generation: 40. 正答率(トレーニング) = 0.7952
+                : 40. 正答率(テスト) = 0.759
+Generation: 50. 正答率(トレーニング) = 0.8262
+                : 50. 正答率(テスト) = 0.786
+Generation: 60. 正答率(トレーニング) = 0.8444
+                : 60. 正答率(テスト) = 0.822
+Generation: 70. 正答率(トレーニング) = 0.8534
+                : 70. 正答率(テスト) = 0.831
+Generation: 80. 正答率(トレーニング) = 0.8416
+                : 80. 正答率(テスト) = 0.799
+Generation: 90. 正答率(トレーニング) = 0.8744
+                : 90. 正答率(テスト) = 0.852
+Generation: 100. 正答率(トレーニング) = 0.8744
+                : 100. 正答率(テスト) = 0.857
 </pre>
 </div>
 </div>
-
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="&#22238;&#24112;&#65288;2-3-2&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">&#22238;&#24112;&#65288;2-3-2&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;<a class="anchor-link" href="#&#22238;&#24112;&#65288;2-3-2&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">&#182;</a></h1>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[8]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 回帰</span>
-<span class="c1"># 2-3-2ネットワーク</span>
-
-<span class="c1"># ！試してみよう_ノードの構成を 3-5-4 に変更してみよう</span>
-
-<span class="c1"># ウェイトとバイアスを設定</span>
-<span class="c1"># ネートワークを作成</span>
-<span class="k">def</span> <span class="nf">init_network</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### ネットワークの初期化 #####&quot;</span><span class="p">)</span>
-
-    <span class="n">input_layer_size</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">hidden_layer_size</span><span class="o">=</span><span class="mi">50</span>
-    <span class="n">output_layer_size</span> <span class="o">=</span> <span class="mi">2</span>
-    
-    <span class="c1">#試してみよう</span>
-    <span class="c1">#_各パラメータのshapeを表示</span>
-    <span class="c1">#_ネットワークの初期値ランダム生成</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">input_layer_size</span><span class="p">,</span> <span class="n">hidden_layer_size</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size</span><span class="p">,</span><span class="n">output_layer_size</span><span class="p">)</span>
-
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">hidden_layer_size</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">output_layer_size</span><span class="p">)</span>
-    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;重み2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス1&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;バイアス2&quot;</span><span class="p">,</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">network</span>
-
-<span class="c1"># プロセスを作成</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### 順伝播開始 #####&quot;</span><span class="p">)</span>
-    
-    <span class="n">W1</span><span class="p">,</span> <span class="n">W2</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span>
-    <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span>
-    <span class="c1"># 隠れ層の総入力</span>
-    <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b1</span>
-    <span class="c1"># 隠れ層の総出力</span>
-    <span class="n">z1</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
-    <span class="c1"># 出力層の総入力</span>
-    <span class="n">u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b2</span>
-    <span class="c1"># 出力層の総出力</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">u2</span>
-    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力1&quot;</span><span class="p">,</span> <span class="n">u1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力1&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力2&quot;</span><span class="p">,</span> <span class="n">u2</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;出力合計: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
-    
-    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">z1</span>
-
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span> <span class="mf">3.</span><span class="p">])</span>
-<span class="n">network</span> <span class="o">=</span>  <span class="n">init_network</span><span class="p">()</span>
-<span class="n">y</span><span class="p">,</span> <span class="n">z1</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-<span class="c1"># 目標出力</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.</span><span class="p">,</span> <span class="mf">4.</span><span class="p">])</span>
-<span class="c1"># 誤差</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">mean_squared_error</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-<span class="c1">## 表示</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##### 結果表示 #####&quot;</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;訓練データ&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;二乗誤差&quot;</span><span class="p">,</span>  <span class="n">loss</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
 
 <div class="jp-OutputArea-child">
 
@@ -15119,321 +14476,13 @@ shape: ()
     <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 
 
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>##### ネットワークの初期化 #####
-*** 重み1 ***
-[[0.59396622 0.63249009 0.56388378 0.38959762 0.27722703 0.38632443
-  0.90810188 0.65170103 0.26008539 0.57699968 0.62164767 0.01251571
-  0.16141628 0.92172352 0.89157781 0.45860064 0.7595936  0.64838302
-  0.52653532 0.76187371 0.42488005 0.56849897 0.42700776 0.89017653
-  0.65388771 0.75540507 0.33190883 0.49306142 0.13005459 0.41234065
-  0.70661794 0.8401294  0.5347373  0.40744355 0.3198694  0.39798669
-  0.91732444 0.42267388 0.63162603 0.30627272 0.4053403  0.8218654
-  0.72462109 0.27126422 0.55696586 0.17092844 0.64600688 0.14095407
-  0.21897958 0.67967059]
- [0.60920484 0.95289732 0.39407478 0.974034   0.7476966  0.5283119
-  0.6127898  0.2426322  0.65892679 0.09621643 0.06873868 0.41576724
-  0.03154238 0.89822803 0.81574587 0.19781497 0.71188316 0.26526956
-  0.79799487 0.74251496 0.33128591 0.34326604 0.44202395 0.22185594
-  0.64789121 0.0739837  0.14141274 0.22472856 0.94519655 0.48233269
-  0.32315244 0.50199288 0.70331143 0.6028888  0.84012156 0.45793548
-  0.18334104 0.39723007 0.17869042 0.80727689 0.46554585 0.46690997
-  0.01276041 0.29604857 0.20752904 0.49106976 0.48670744 0.83522015
-  0.47175719 0.31716255]
- [0.71023457 0.90361415 0.75800938 0.5400209  0.59526644 0.01199663
-  0.23927537 0.16178108 0.8356717  0.68092771 0.96535896 0.33431743
-  0.4989673  0.85858861 0.72305568 0.22360176 0.54490343 0.78738742
-  0.60186665 0.97038521 0.93227128 0.20825913 0.96028299 0.91882223
-  0.28244332 0.35591109 0.66615252 0.31306497 0.47043631 0.34912891
-  0.5123723  0.7743644  0.54861847 0.05606248 0.81983299 0.89980901
-  0.43405179 0.93585163 0.06905457 0.03990804 0.78533694 0.33102409
-  0.84609077 0.95787441 0.09997802 0.43428574 0.16436495 0.64000396
-  0.10439708 0.11284099]]
-shape: (3, 50)
 
-*** 重み2 ***
-[[0.465802   0.48702077]
- [0.36582792 0.97473601]
- [0.21427287 0.8086297 ]
- [0.30810868 0.33386364]
- [0.8377293  0.04045547]
- [0.7034234  0.85758404]
- [0.93337128 0.70578149]
- [0.57403753 0.75380791]
- [0.24504339 0.08289942]
- [0.28629543 0.71241222]
- [0.79556181 0.53837879]
- [0.97236142 0.98594046]
- [0.66052968 0.96559928]
- [0.94650948 0.15889047]
- [0.44955446 0.4515154 ]
- [0.4133901  0.77274773]
- [0.32062573 0.3784187 ]
- [0.90292364 0.94542486]
- [0.21102372 0.33743799]
- [0.64459993 0.62021276]
- [0.26452508 0.63078925]
- [0.88254051 0.82004173]
- [0.36990214 0.9906456 ]
- [0.44464464 0.4822403 ]
- [0.95634465 0.57615371]
- [0.73206557 0.08769039]
- [0.97893762 0.93597626]
- [0.23945084 0.77752239]
- [0.64768278 0.40250814]
- [0.8524483  0.38903318]
- [0.96983066 0.2478277 ]
- [0.24676493 0.06930064]
- [0.41072461 0.8564986 ]
- [0.14594405 0.46767192]
- [0.86166222 0.78047838]
- [0.42213794 0.7894319 ]
- [0.05784217 0.5578128 ]
- [0.46714466 0.67018533]
- [0.60494722 0.62414971]
- [0.72123224 0.37311428]
- [0.45558684 0.00757084]
- [0.1322898  0.14697228]
- [0.58455541 0.48142122]
- [0.11299421 0.54562699]
- [0.60197192 0.92837453]
- [0.67716122 0.39763969]
- [0.96931696 0.13110684]
- [0.55137483 0.15098307]
- [0.6973612  0.27397144]
- [0.75518281 0.93434076]]
-shape: (50, 2)
 
-*** バイアス1 ***
-[0.67764456 0.76105382 0.77670965 0.29319135 0.49657235 0.28258102
- 0.64317702 0.62388225 0.04531256 0.38809908 0.10376484 0.67688024
- 0.70765185 0.77582364 0.42725601 0.46064654 0.54066746 0.19557078
- 0.88919405 0.95945587 0.75047122 0.66637252 0.79207666 0.9344444
- 0.07933667 0.18234344 0.40330967 0.84780246 0.72828454 0.00165567
- 0.56865499 0.67320262 0.25866703 0.15382713 0.85913836 0.79083597
- 0.93927445 0.32131346 0.86808726 0.63990793 0.86514735 0.47834972
- 0.66545237 0.83911543 0.97350367 0.13466966 0.07440974 0.86013424
- 0.28784474 0.18694817]
-shape: (50,)
-
-*** バイアス2 ***
-[0.44222974 0.77099125]
-shape: (2,)
-
-##### 順伝播開始 #####
-*** 総入力1 ***
-[4.62072416 6.010181   4.40277113 4.25091965 4.05499188 1.76151913
- 3.49468459 2.24619092 4.13026661 3.20031475 3.75896677 2.52388271
- 2.4290548  6.06976903 5.1194926  1.98568238 4.35873767 3.73665518
- 4.81731906 6.11751514 4.63473694 2.54618099 4.9839813  5.02479949
- 2.87633675 2.15344917 3.01650154 2.72951589 4.16004116 2.42604844
- 3.45869471 4.84041097 3.84588259 1.93523572 5.31874985 4.80412066
- 3.52543636 4.34600238 2.06425782 2.68045855 4.55759018 3.22710732
- 3.95386659 4.57610003 2.24546168 2.59059483 2.18692633 4.59154048
- 1.76352993 1.83946684]
-shape: (50,)
-
-*** 中間層出力1 ***
-[4.62072416 6.010181   4.40277113 4.25091965 4.05499188 1.76151913
- 3.49468459 2.24619092 4.13026661 3.20031475 3.75896677 2.52388271
- 2.4290548  6.06976903 5.1194926  1.98568238 4.35873767 3.73665518
- 4.81731906 6.11751514 4.63473694 2.54618099 4.9839813  5.02479949
- 2.87633675 2.15344917 3.01650154 2.72951589 4.16004116 2.42604844
- 3.45869471 4.84041097 3.84588259 1.93523572 5.31874985 4.80412066
- 3.52543636 4.34600238 2.06425782 2.68045855 4.55759018 3.22710732
- 3.95386659 4.57610003 2.24546168 2.59059483 2.18692633 4.59154048
- 1.76352993 1.83946684]
-shape: (50,)
-
-*** 総入力2 ***
-[98.20306756 98.07646558]
-shape: (2,)
-
-*** 出力1 ***
-[98.20306756 98.07646558]
-shape: (2,)
-
-出力合計: 196.27953313348164
-
-##### 結果表示 #####
-*** 中間層出力 ***
-[4.62072416 6.010181   4.40277113 4.25091965 4.05499188 1.76151913
- 3.49468459 2.24619092 4.13026661 3.20031475 3.75896677 2.52388271
- 2.4290548  6.06976903 5.1194926  1.98568238 4.35873767 3.73665518
- 4.81731906 6.11751514 4.63473694 2.54618099 4.9839813  5.02479949
- 2.87633675 2.15344917 3.01650154 2.72951589 4.16004116 2.42604844
- 3.45869471 4.84041097 3.84588259 1.93523572 5.31874985 4.80412066
- 3.52543636 4.34600238 2.06425782 2.68045855 4.55759018 3.22710732
- 3.95386659 4.57610003 2.24546168 2.59059483 2.18692633 4.59154048
- 1.76352993 1.83946684]
-shape: (50,)
-
-*** 出力 ***
-[98.20306756 98.07646558]
-shape: (2,)
-
-*** 訓練データ ***
-[2. 4.]
-shape: (2,)
-
-*** 二乗誤差 ***
-4526.35289568458
-shape: ()
-
-</pre>
-</div>
+<div class="jp-RenderedImage jp-OutputArea-output ">
+<img src="data:image/png;base64,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Z968ebRu3XpvnBUVFdx8881kZmZiZtx0003cfffdrFmzhttvv528vDzi4uJ46aWX2L59O5MnT+bzzz/n8ccf57333qNbtyN78qJqBCLSZD355JN069aNhQsXMnasN6fl/Pnz+eMf/8jKlSsBeOWVV5g3bx6ZmZmMGzeObdu2HXCcVatWcfvtt5OVlUVycjLvvfderZ/XunVr5s+fz6233spTTz0FwKOPPsqZZ55JVlYWl19+OevXrz/gfQsXLiQ3N5elS5eyZMkSbrzxRgDGjBnDc889x7x583jqqae47bbbOOWUU7jooosYO3YsCxcuPOIkAKoRiEgDquvKvSENHjx4vzH248aN44MPPgAgOzubVatWkZKSst97unbtSv/+/QEYOHAg3333Xa3HvvTSS/fu8/777wPwxRdf7D3+8OHDadmy5QHvO+aYY1i7di133nknF1xwAeeeey5FRUXMmjWLK664Yu9+JSWhmZdTiUBEwkp8fPze3z/77DNmzJjBV199RVxcHMOGDat1DH7z5s33/h4REcGePXtqPXbVfhEREYfsg6iuZcuWLFq0iKlTp/LCCy8wYcIEnn32WZKTk1m4cGHQx/m+1DQkIk1WYmIihYWFdW4vKCigZcuWxMXFsWLFCmbPnl3vMQwdOpQJEyYAMG3aNHbs2HHAPlu3bqWyspLLLruMxx9/nPnz59OiRQu6du3KxIkTAe+u4UWLFgX1dx0uJQIRabJSUlIYOnQoffv25d577z1g+/DhwykvL6dXr17cd999nHzyyfUew8MPP8y0adPo27cvEydOpH379iQmJu63T25uLsOGDaN///5cc801PPHEEwC89dZb/O1vf6Nfv3706dOHSZMmAXDVVVcxduxYBgwYwJo1a444RnPOHfFBGlJGRobLzMz0OwwRCdLy5cvp1auX32H4pqSkhIiICCIjI/nqq6+49dZbQ97cU9s5N7N5zrmM2vZXH4GISAitX7+eK6+8ksrKSqKjo3nppZf8DukASgQiIiHUo0cPFixY4HcYB6U+AhGRMKdEICIS5pQIRETCnBKBiEiYUyIQkSbrSKahBnj22WfZvXv3Ecfx2WefMWvWrCM+TqgoEYhIk6VEEBwNHxWRhvPv+2DTkvo9ZvvjYcSTtW6qOQ312LFjGTt2LBMmTKCkpIRLLrmERx99lF27dnHllVeSk5ND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"
+>
 </div>
 
-</div>
-
-</div>
-
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="2&#20516;&#20998;&#39006;&#65288;2-3-1&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">2&#20516;&#20998;&#39006;&#65288;2-3-1&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;<a class="anchor-link" href="#2&#20516;&#20998;&#39006;&#65288;2-3-1&#12493;&#12483;&#12488;&#12527;&#12540;&#12463;&#65289;">&#182;</a></h1>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell   ">
-<div class="jp-Cell-inputWrapper">
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[9]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-     <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># 2値分類</span>
-<span class="c1"># 2-3-1ネットワーク</span>
-
-<span class="c1"># ！試してみよう_ノードの構成を 5-10-20-1 に変更してみよう</span>
-
-<span class="c1"># ウェイトとバイアスを設定</span>
-<span class="c1"># ネートワークを作成</span>
-<span class="k">def</span> <span class="nf">init_network</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### ネットワークの初期化 #####&quot;</span><span class="p">)</span>
-
-    <span class="n">network</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
-        <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
-    <span class="p">])</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">]</span> <span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
-    <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span> <span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">network</span>
-
-
-<span class="c1"># プロセスを作成</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;##### 順伝播開始 #####&quot;</span><span class="p">)</span>
-    
-    <span class="n">W1</span><span class="p">,</span> <span class="n">W2</span><span class="p">,</span> <span class="n">W3</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;W2&#39;</span><span class="p">],</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;W3&#39;</span><span class="p">]</span>
-    <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">b3</span> <span class="o">=</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span> <span class="n">network</span><span class="p">[</span><span class="s1">&#39;b2&#39;</span><span class="p">],</span><span class="n">network</span><span class="p">[</span><span class="s1">&#39;b3&#39;</span><span class="p">]</span>
-
-    <span class="c1"># 隠れ層の総入力</span>
-    <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W1</span><span class="p">)</span> <span class="o">+</span> <span class="n">b1</span>
-    <span class="c1"># 隠れ層1の総出力</span>
-    <span class="n">z1</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
-    <span class="c1"># 隠れ層２層への総入力</span>
-    <span class="n">u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z1</span><span class="p">,</span> <span class="n">W2</span><span class="p">)</span> <span class="o">+</span> <span class="n">b2</span>
-    <span class="c1"># 隠れ層2の出力</span>
-    <span class="n">z2</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span>
-    
-    <span class="n">u3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z2</span><span class="p">,</span> <span class="n">W3</span><span class="p">)</span> <span class="o">+</span> <span class="n">b3</span>
-    <span class="n">z3</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">u3</span><span class="p">)</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">z3</span>    
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力1&quot;</span><span class="p">,</span> <span class="n">u1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力1&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;総入力2&quot;</span><span class="p">,</span> <span class="n">u2</span><span class="p">)</span>
-    <span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力1&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;出力合計: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
-
-    <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">z1</span>
-
-<span class="c1"># 入力値</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">,</span><span class="mf">2.</span><span class="p">,</span><span class="mf">4.</span><span class="p">,</span><span class="mf">5.</span><span class="p">])</span>
-
-<span class="c1"># 目標出力</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
-<span class="n">network</span> <span class="o">=</span>  <span class="n">init_network</span><span class="p">()</span>
-<span class="n">y</span><span class="p">,</span> <span class="n">z1</span> <span class="o">=</span> <span class="n">forward</span><span class="p">(</span><span class="n">network</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-<span class="c1"># 誤差</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">cross_entropy_error</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-
-<span class="c1">## 表示</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">##### 結果表示 #####&quot;</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;中間層出力&quot;</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;出力&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;訓練データ&quot;</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
-<span class="n">print_vec</span><span class="p">(</span><span class="s2">&quot;交差エントロピー誤差&quot;</span><span class="p">,</span>  <span class="n">loss</span><span class="p">)</span>
-</pre></div>
-
-     </div>
-</div>
-</div>
-</div>
-
-<div class="jp-Cell-outputWrapper">
-
-
-<div class="jp-OutputArea jp-Cell-outputArea">
-
-<div class="jp-OutputArea-child">
-
-    
-    <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-
-
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain">
-<pre>##### ネットワークの初期化 #####
-##### 順伝播開始 #####
-*** 総入力1 ***
-[1.81543851 4.66605373 7.58504592 2.25625428 4.90879859 7.45742953
- 2.05583631 4.38631812 7.07920684 2.33135204]
-shape: (10,)
-
-*** 中間層出力1 ***
-[1.81543851 4.66605373 7.58504592 2.25625428 4.90879859 7.45742953
- 2.05583631 4.38631812 7.07920684 2.33135204]
-shape: (10,)
-
-*** 総入力2 ***
-[18.56159773 27.12109532 23.67341002 24.21313893 21.98943764 23.80541735
- 22.80114976 24.65430845 25.55227545 19.87072016 18.56974746 27.01712291
- 23.02198605 28.26394962 15.29271553 22.7502627  23.13056581 34.05288924
- 23.94732583 22.18593128]
-shape: (20,)
-
-*** 出力1 ***
-[1.]
-shape: (1,)
-
-出力合計: 1.0
-
-##### 結果表示 #####
-*** 中間層出力 ***
-[1.81543851 4.66605373 7.58504592 2.25625428 4.90879859 7.45742953
- 2.05583631 4.38631812 7.07920684 2.33135204]
-shape: (10,)
-
-*** 出力 ***
-[1.]
-shape: (1,)
-
-*** 訓練データ ***
-[1]
-shape: (1,)
-
-*** 交差エントロピー誤差 ***
--9.999999505838704e-08
-shape: ()
-
-</pre>
-</div>
 </div>
 
 </div>
