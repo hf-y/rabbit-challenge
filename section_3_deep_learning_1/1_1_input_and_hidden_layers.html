@@ -13992,15 +13992,7 @@ a.anchor-link {
 <li>Affine変換</li>
 <li>活性化関数</li>
 </ol>
-<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数とはAffine変換後の成分ごとに適用する適当な非線形変換で, 例えば以下のようなものが用いられる.</p>
-<ul>
-<li>sigmoid</li>
-<li>softmax</li>
-<li>tanh</li>
-<li>ReLU</li>
-<li>eReLU</li>
-<li>Leaky ReLU</li>
-</ul>
+<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数は次のセクションで説明する.</p>
 <p>なお, 入力データが画像などの場合に用いられるニューラルでは上述のAffine変換の部分がより複雑な構造になる（例えば, CNN + Pooling）. また, 自然言語処理や時系列などの系列データを入力とする場合は, データを系列に沿って同じ層に順次入力する層が用いられる.</p>
 
 </div>
@@ -14012,13 +14004,54 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><a href="exercise/1_1_forward_propagation_after.html">1_1_forward_propagation_after.ipynb</a></p>
+<p><a href="exercise/1_1_forward_propagation.html">1_1_forward_propagation.ipynb</a></p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <h2 id="1-3-%E8%80%83%E5%AF%9F%E3%81%AA%E3%81%A9">1-3 &#32771;&#23519;&#12394;&#12393;<a class="anchor-link" href="#1-3-%E8%80%83%E5%AF%9F%E3%81%AA%E3%81%A9">&#182;</a></h2>
+</div>
+</div>
+<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<h3 id="%E4%B8%87%E8%83%BD%E8%BF%91%E4%BC%BC%E5%AE%9A%E7%90%86%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6">&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;<a class="anchor-link" href="#%E4%B8%87%E8%83%BD%E8%BF%91%E4%BC%BC%E5%AE%9A%E7%90%86%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6">&#182;</a></h3><p>講義では万能近似定理（Universal approximatin theorem）に触れていた.</p>
+<ul>
+<li>Hornik et. al., 1989<ul>
+<li>Multilayer feedforward networks are universal approximators</li>
+</ul>
+</li>
+<li>Cybenko, 1989<ul>
+<li>Approximation by superpositions of a sigmoidal function</li>
+</ul>
+</li>
+</ul>
+<p>多層パーセプトロンが任意の関数を近似できることが示されている. 
+外部資料として次の動画が挙げていた.</p>
+<ul>
+<li>Carnegie Mellon University Deep Learning<ul>
+<li><a href="https://www.youtube.com/watch?v=lkha188L4Gs">Lecture 2 | The Universal Approximation Theorem</a></li>
+</ul>
+</li>
+</ul>
+<p>一方で, 学習モデルに任意の関数を近似する能力があるからといって, 実際に学習させてみたときに観察される高い汎化性能を説明したことにはならない. この点については近年諸説提案されており研究が盛り上がっている. 例えば</p>
+<ul>
+<li>Jonathan Frankle, Michael Carbin<ul>
+<li>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</li>
+<li><a href="https://arxiv.org/abs/1803.03635">arXiv:1803.03635</a></li>
+</ul>
+</li>
+</ul>
+<p>最近出版された和書として以下がある.</p>
+<ul>
+<li>今泉允聡<ul>
+<li>深層学習の原理に迫る</li>
+<li>岩波科学ライブラリー 303</li>
+<li>刊行日 2021/04/16</li>
+</ul>
+</li>
+</ul>
+
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
