@@ -9,6 +9,5 @@ DNN_code_colab_lesson_3_4/lesson_3/3_2_tf_languagemodel/*
 !DNN_code_colab_lesson_3_4/lesson_3/3_2_tf_languagemodel/predict_word_*
 !DNN_code_colab_lesson_3_4/lesson_4/*
 DNN_code_colab_lesson_3_4/lesson_4/MNIST_data/
-DNN_code_recent_CNN/*
-!DNN_code_recent_CNN/recent_cnn.ipynb
+DNN_code_recent_CNN/
 /*/old/
