@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_1_input_and_hidden_layers</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>2_3_overfitting</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14243,41 +14243,54 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="Deep-Learning-Day-1">Deep Learning Day 1<a class="anchor-link" href="#Deep-Learning-Day-1">&#182;</a></h1>
+<h1 id="Deep-Learning-Day-2">Deep Learning Day 2<a class="anchor-link" href="#Deep-Learning-Day-2">&#182;</a></h1>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">1 &#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;<a class="anchor-link" href="#1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">&#182;</a></h2>
+<h2 id="3-&#36942;&#23398;&#32722;">3 &#36942;&#23398;&#32722;<a class="anchor-link" href="#3-&#36942;&#23398;&#32722;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-1-&#35201;&#28857;">1-1 &#35201;&#28857;<a class="anchor-link" href="#1-1-&#35201;&#28857;">&#182;</a></h3>
+<h3 id="3-1-&#35201;&#28857;">3-1 &#35201;&#28857;<a class="anchor-link" href="#3-1-&#35201;&#28857;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>現代的なニューラルネットは層構造を成す. 入力ベクトルを受け取る最初の層を入力層と呼び, 以降, 出力までの層を中間層と呼ぶ.</p>
-<p>最も単純な構造を持つニューラルネットである多層パーセプトロンでは, 中間層において前の層からの入力（前の層の出力）に</p>
-<ol>
-<li>Affine変換</li>
-<li>活性化関数</li>
-</ol>
-<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数は次のセクションで説明する.</p>
-<p>なお, 入力データが画像などの場合に用いられるニューラルでは上述のAffine変換の部分がより複雑な構造になる（例えば, CNN + Pooling）. また, 自然言語処理や時系列などの系列データを入力とする場合は, データを系列に沿って同じ層に順次入力する層が用いられる.</p>
+<p>過学習とは, 訓練データでは高い性能を示していた学習モデルが, テストデータに対しては低い精度を示す現象である.</p>
+<p>過学習はニューラルネットで確率的勾配降下法を行ったときに観察される. 訓練データ, 検証データに対する損失関数を訓練損失, 検証損失と呼ぶことにしよう. 横軸にエポック数を, 縦軸に損失関数の値をとったグラフを描くと, 最初はエポック数とともに訓練損失と検証損失の両方が減少する. しかしある程度エポック数が大きくなったところから検証損失だけが上昇する. この領域で過学習が発生している.</p>
+<p>過学習を抑制する方法として講義では以下の方法が紹介された.</p>
+<ul>
+<li>損失関数に対する正則化項の導入<ul>
+<li>weight decay<ul>
+<li>学習パラメータの $L^2$ ノルムを正則化項とする</li>
+</ul>
+</li>
+<li>sparse 正則化<ul>
+<li>学習パラメータの $L^1$ ノルムを正則化項とする</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>dropout<ul>
+<li>訓練時のみ特定の層のニューロンをランダムに選んで値をゼロとする</li>
+<li>その層のニューロンのうちゼロにする割合をdropout rateと呼ぶ</li>
+<li>推論時はdropoutしない代わりに選択確率をかけて出力を小さくする（訓練時と同等にする）</li>
+</ul>
+</li>
+</ul>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">1-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
+<h3 id="3-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">3-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#3-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><a href="exercise/1_1_forward_propagation.html">1_1_forward_propagation</a></p>
-<p><a href="exercise/1_1_forward_propagation_after.html">1_1_forward_propagation_after</a></p>
+<p><a href="exercise/2_5_overfiting.html">2_5_overfiting</a></p>
 
 </div>
 </div>
@@ -14288,47 +14301,22 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h4 id="&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;<a class="anchor-link" href="#&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#182;</a></h4><p>講義では万能近似定理（Universal approximatin theorem）に触れていた.</p>
+<p>dropoutとベイズ推論との関係および信頼度を求めるという利用方法が以下で論じられている.</p>
 <ul>
-<li>Hornik et al., 1989<ul>
-<li>Multilayer feedforward networks are universal approximators</li>
-</ul>
-</li>
-<li>Cybenko, 1989<ul>
-<li>Approximation by superpositions of a sigmoidal function</li>
+<li>Yarin Gal, Zoubin Ghahramani<ul>
+<li>Dropout as a Bayesian Approximation: Representing Model Uncertainty in Deep Learning</li>
+<li><a href="https://arxiv.org/abs/1506.02142">arXiv:1506.02142</a></li>
 </ul>
 </li>
 </ul>
-<p>多層パーセプトロンが任意の関数を近似できることが示されている. 
-外部資料として次の動画が挙げていた.</p>
+<p>以下で議論されているようにdropoutとバッチ正則化の相性が悪いということもあってか, 最近ではdropoutを採用している論文を見かけない.</p>
 <ul>
-<li>Carnegie Mellon University Deep Learning<ul>
-<li><a href="https://www.youtube.com/watch?v=lkha188L4Gs">Lecture 2 | The Universal Approximation Theorem</a></li>
+<li>X. Li et al.<ul>
+<li>Understanding the Disharmony between Dropout and Batch Normalization by Variance Shift</li>
+<li><a href="https://arxiv.org/abs/1801.05134">arXiv:1801.05134</a></li>
 </ul>
 </li>
 </ul>
-<p>一方で, 学習モデルに任意の関数を近似する能力があるからといって, 実際に学習させてみたときに観察される高い汎化性能を説明したことにはならない. この点については近年諸説提案されており研究が盛り上がっている. 例えば</p>
-<ul>
-<li>Jonathan Frankle, Michael Carbin<ul>
-<li>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</li>
-<li><a href="https://arxiv.org/abs/1803.03635">arXiv:1803.03635</a></li>
-</ul>
-</li>
-</ul>
-<p>最近出版された和書として以下がある.</p>
-<ul>
-<li>今泉允聡<ul>
-<li>深層学習の原理に迫る</li>
-<li>岩波科学ライブラリー 303</li>
-<li>刊行日 2021/04/16</li>
-</ul>
-</li>
-</ul>
-
-</div>
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 
 </div>
 </div>

@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_1_input_and_hidden_layers</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>2_1_vanishing_gradient_problem</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14243,12 +14243,12 @@ a.anchor-link {
 
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h1 id="Deep-Learning-Day-1">Deep Learning Day 1<a class="anchor-link" href="#Deep-Learning-Day-1">&#182;</a></h1>
+<h1 id="Deep-Learning-Day-2">Deep Learning Day 2<a class="anchor-link" href="#Deep-Learning-Day-2">&#182;</a></h1>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">1 &#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;<a class="anchor-link" href="#1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">&#182;</a></h2>
+<h2 id="1-&#21246;&#37197;&#28040;&#22833;&#21839;&#38988;">1 &#21246;&#37197;&#28040;&#22833;&#21839;&#38988;<a class="anchor-link" href="#1-&#21246;&#37197;&#28040;&#22833;&#21839;&#38988;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
@@ -14258,14 +14258,27 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>現代的なニューラルネットは層構造を成す. 入力ベクトルを受け取る最初の層を入力層と呼び, 以降, 出力までの層を中間層と呼ぶ.</p>
-<p>最も単純な構造を持つニューラルネットである多層パーセプトロンでは, 中間層において前の層からの入力（前の層の出力）に</p>
-<ol>
-<li>Affine変換</li>
-<li>活性化関数</li>
-</ol>
-<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数は次のセクションで説明する.</p>
-<p>なお, 入力データが画像などの場合に用いられるニューラルでは上述のAffine変換の部分がより複雑な構造になる（例えば, CNN + Pooling）. また, 自然言語処理や時系列などの系列データを入力とする場合は, データを系列に沿って同じ層に順次入力する層が用いられる.</p>
+<p>勾配消失問題とはニューラルネットにおいて誤差逆伝播の途中で勾配がゼロになり, 学習パラメータが更新されなくなる現象である.</p>
+<p>この現象は例えば活性化関数にsigmoid関数を採用した場合に現れる. sigmoid関数 $f(x)$ の微分は $f^{\prime}(x) = f(x)(1-f(x))$ となるが, $0 \lt f(x) \lt 1$ であるため $0 \lt f^{\prime}(x) \lt 0.25$ となる. 誤差逆伝播で計算グラフをたどると, このように $1$ よりも小さな数を何度も掛けることになり, 結果として非常に小さな値になってしまう.</p>
+<p>勾配消失問題を防ぐ方策としては以下がある.</p>
+<ul>
+<li>活性化関数の選択<ul>
+<li>ReLUなど</li>
+</ul>
+</li>
+<li>重みの初期化の工夫<ul>
+<li>Xavierの初期化<ul>
+<li>"S字型"の活性化関数に用いる</li>
+</ul>
+</li>
+<li>Heの初期化<ul>
+<li>ReLUなど"S字型"でない活性化関数に用いる</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>バッチ正規化</li>
+</ul>
 
 </div>
 </div>
@@ -14276,8 +14289,8 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><a href="exercise/1_1_forward_propagation.html">1_1_forward_propagation</a></p>
-<p><a href="exercise/1_1_forward_propagation_after.html">1_1_forward_propagation_after</a></p>
+<p><a href="exercise/2_2_1_vanishing_gradient.html">2_2_1_vanishing_gradient</a></p>
+<p><a href="exercise/2_2_2_vanishing_gradient_modified.html">2_2_2_vanishing_gradient_modified</a></p>
 
 </div>
 </div>
@@ -14288,47 +14301,11 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h4 id="&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;<a class="anchor-link" href="#&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#182;</a></h4><p>講義では万能近似定理（Universal approximatin theorem）に触れていた.</p>
-<ul>
-<li>Hornik et al., 1989<ul>
-<li>Multilayer feedforward networks are universal approximators</li>
-</ul>
-</li>
-<li>Cybenko, 1989<ul>
-<li>Approximation by superpositions of a sigmoidal function</li>
-</ul>
-</li>
-</ul>
-<p>多層パーセプトロンが任意の関数を近似できることが示されている. 
-外部資料として次の動画が挙げていた.</p>
-<ul>
-<li>Carnegie Mellon University Deep Learning<ul>
-<li><a href="https://www.youtube.com/watch?v=lkha188L4Gs">Lecture 2 | The Universal Approximation Theorem</a></li>
-</ul>
-</li>
-</ul>
-<p>一方で, 学習モデルに任意の関数を近似する能力があるからといって, 実際に学習させてみたときに観察される高い汎化性能を説明したことにはならない. この点については近年諸説提案されており研究が盛り上がっている. 例えば</p>
-<ul>
-<li>Jonathan Frankle, Michael Carbin<ul>
-<li>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</li>
-<li><a href="https://arxiv.org/abs/1803.03635">arXiv:1803.03635</a></li>
-</ul>
-</li>
-</ul>
-<p>最近出版された和書として以下がある.</p>
-<ul>
-<li>今泉允聡<ul>
-<li>深層学習の原理に迫る</li>
-<li>岩波科学ライブラリー 303</li>
-<li>刊行日 2021/04/16</li>
-</ul>
-</li>
-</ul>
-
-</div>
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>講義では触れられていなかったが, 勾配消失問題の防ぎ方としてネットワークアーキテクチャの工夫が考えられる. 例えばskip-connectionとして知られる構造がある. ある層による入力データ $x$ の変換 $f(x)$ に対して, 
+$$
+f(x) + x
+$$
+を考える. $x$ の部分が計算グラフでは $f(x)$ の適用をスキップした分岐に見えるのでこのように呼ばれる. このアーキテクチャを持つネットワークは提案論文で ResNet と名付けられた.</p>
 
 </div>
 </div>

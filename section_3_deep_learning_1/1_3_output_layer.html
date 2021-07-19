@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_1_input_and_hidden_layers</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>1_3_output_layer</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14248,30 +14248,25 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">1 &#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;<a class="anchor-link" href="#1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">&#182;</a></h2>
+<h2 id="3-&#20986;&#21147;&#23652;">3 &#20986;&#21147;&#23652;<a class="anchor-link" href="#3-&#20986;&#21147;&#23652;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-1-&#35201;&#28857;">1-1 &#35201;&#28857;<a class="anchor-link" href="#1-1-&#35201;&#28857;">&#182;</a></h3>
+<h3 id="3-1-&#35201;&#28857;">3-1 &#35201;&#28857;<a class="anchor-link" href="#3-1-&#35201;&#28857;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>現代的なニューラルネットは層構造を成す. 入力ベクトルを受け取る最初の層を入力層と呼び, 以降, 出力までの層を中間層と呼ぶ.</p>
-<p>最も単純な構造を持つニューラルネットである多層パーセプトロンでは, 中間層において前の層からの入力（前の層の出力）に</p>
-<ol>
-<li>Affine変換</li>
-<li>活性化関数</li>
-</ol>
-<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数は次のセクションで説明する.</p>
-<p>なお, 入力データが画像などの場合に用いられるニューラルでは上述のAffine変換の部分がより複雑な構造になる（例えば, CNN + Pooling）. また, 自然言語処理や時系列などの系列データを入力とする場合は, データを系列に沿って同じ層に順次入力する層が用いられる.</p>
+<p>出力層とはニューラルネットの最終層のことである. 
+出力層の値と正解データから誤差関数を計算する. 学習とはこの誤差関数に正則化項を加えたものを損失関数とし, その小さくするように学習パラメータを更新することである. パラメータ更新の具体的な方法は次のセクションで扱う.</p>
+<p>出力層の活性化関数には, 分類問題の場合はsoftmax関数を, 回帰問題の場合を恒等関数を用いることが多い.  また, それぞれ誤差関数は, 交差エントロピーと二乗誤差が用いられる.</p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">1-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
+<h3 id="3-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">3-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#3-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
@@ -14283,52 +14278,35 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-3-&#32771;&#23519;&#12394;&#12393;">1-3 &#32771;&#23519;&#12394;&#12393;<a class="anchor-link" href="#1-3-&#32771;&#23519;&#12394;&#12393;">&#182;</a></h3>
+<h3 id="3-3-&#32771;&#23519;&#12394;&#12393;">3-3 &#32771;&#23519;&#12394;&#12393;<a class="anchor-link" href="#3-3-&#32771;&#23519;&#12394;&#12393;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h4 id="&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;<a class="anchor-link" href="#&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#182;</a></h4><p>講義では万能近似定理（Universal approximatin theorem）に触れていた.</p>
-<ul>
-<li>Hornik et al., 1989<ul>
-<li>Multilayer feedforward networks are universal approximators</li>
-</ul>
-</li>
-<li>Cybenko, 1989<ul>
-<li>Approximation by superpositions of a sigmoidal function</li>
-</ul>
-</li>
-</ul>
-<p>多層パーセプトロンが任意の関数を近似できることが示されている. 
-外部資料として次の動画が挙げていた.</p>
-<ul>
-<li>Carnegie Mellon University Deep Learning<ul>
-<li><a href="https://www.youtube.com/watch?v=lkha188L4Gs">Lecture 2 | The Universal Approximation Theorem</a></li>
-</ul>
-</li>
-</ul>
-<p>一方で, 学習モデルに任意の関数を近似する能力があるからといって, 実際に学習させてみたときに観察される高い汎化性能を説明したことにはならない. この点については近年諸説提案されており研究が盛り上がっている. 例えば</p>
-<ul>
-<li>Jonathan Frankle, Michael Carbin<ul>
-<li>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</li>
-<li><a href="https://arxiv.org/abs/1803.03635">arXiv:1803.03635</a></li>
-</ul>
-</li>
-</ul>
-<p>最近出版された和書として以下がある.</p>
-<ul>
-<li>今泉允聡<ul>
-<li>深層学習の原理に迫る</li>
-<li>岩波科学ライブラリー 303</li>
-<li>刊行日 2021/04/16</li>
-</ul>
-</li>
-</ul>
-
-</div>
-</div>
-<div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
+<p>２値分類問題で最終層の活性化関数を sigmoid 関数にすることと誤差関数を交差エントロピーにすることが整合することを確認する.</p>
+<p>学習パラメータを $w$ として最終層の出力を $p_i(w)$, 正解を$q_i$ とする. ここで $i$ はベクトルの成分の添え字である.
+データに関する和を省略すると, 交差エントロピーは
+$$
+E(w) = -q_0\log{p_0(w)}-q_1\log{p_1(w)}
+$$</p>
+<p>ここで $p(w)=p_1(w)$, $q=q_1$ とおくと, $p_{0}(w) = 1 - p(w)$, $q_0 = 1 - q$なので,
+$$
+E(w) = -q\log{p(w)}-(1-q)\log{(1-p(w))}
+$$</p>
+<p>今, $p(w)$が sigmoid 関数なので
+$$
+\frac{dp}{dw} = p(1-p)
+$$</p>
+<p>よって $w$ で微分すると</p>
+$$
+\begin{array}{ll}
+\frac{dE}{dw} &amp;= \frac{dE}{dp} \frac{dp}{dw} \\
+&amp;= \left( -\frac{q}{p} + \frac{1-q}{1-p} \right) p(1-p) \\
+&amp;= -q(1-p) + (1-q)p \\
+&amp;= p-q
+\end{array}
+$$<p></p>
+<p>したがって誤差関数の微分がゼロとなる点で $p_i = q_i \ (i=0, 1)$ となる.</p>
 
 </div>
 </div>

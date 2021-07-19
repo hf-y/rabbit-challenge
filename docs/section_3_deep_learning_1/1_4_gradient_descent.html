@@ -3,7 +3,7 @@
 <head><meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>1_1_input_and_hidden_layers</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>1_4_gradient_descent</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 
 
 
@@ -14248,82 +14248,42 @@ a.anchor-link {
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h2 id="1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">1 &#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;<a class="anchor-link" href="#1-&#20837;&#21147;&#23652;&#12392;&#20013;&#38291;&#23652;">&#182;</a></h2>
+<h2 id="4-&#21246;&#37197;&#38477;&#19979;&#27861;">4 &#21246;&#37197;&#38477;&#19979;&#27861;<a class="anchor-link" href="#4-&#21246;&#37197;&#38477;&#19979;&#27861;">&#182;</a></h2>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-1-&#35201;&#28857;">1-1 &#35201;&#28857;<a class="anchor-link" href="#1-1-&#35201;&#28857;">&#182;</a></h3>
+<h3 id="4-1-&#35201;&#28857;">4-1 &#35201;&#28857;<a class="anchor-link" href="#4-1-&#35201;&#28857;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p>現代的なニューラルネットは層構造を成す. 入力ベクトルを受け取る最初の層を入力層と呼び, 以降, 出力までの層を中間層と呼ぶ.</p>
-<p>最も単純な構造を持つニューラルネットである多層パーセプトロンでは, 中間層において前の層からの入力（前の層の出力）に</p>
-<ol>
-<li>Affine変換</li>
-<li>活性化関数</li>
-</ol>
-<p>を適用する. Affine変換を定める行列とベクトルが学習パラメータである. 活性化関数は次のセクションで説明する.</p>
-<p>なお, 入力データが画像などの場合に用いられるニューラルでは上述のAffine変換の部分がより複雑な構造になる（例えば, CNN + Pooling）. また, 自然言語処理や時系列などの系列データを入力とする場合は, データを系列に沿って同じ層に順次入力する層が用いられる.</p>
+<p>ニューラルネットの学習は通常, 損失関数の勾配を降下する向きに学習パラメータを更新することで行う. 
+これを勾配降下法と呼ぶ.</p>
+<p>損失関数を構成する際, 訓練データに関する和を取るが, データの選び方によっていくつかの選択肢が考えられる.
+まず損失関数で訓練データに関する和を取らず, データをひとつずつ学習することが考えられる. この方法だとオンライン学習が可能となるが, 個別データに含まれるかもしれないノイズの影響を強く受ける懸念がある. そこで次に全訓練データで損失関数を構成し, 毎回全訓練データを用いて学習を進める方法が考えられる. これをバッチ勾配降下法と呼ぶが, この方法では計算コストが大きくなりすぎる. そこで全訓練データからランダムに選んだ一部のデータを用いる方法が考えられた. これを確率的勾配降下法と呼び, このとき選び出した複数のデータをミニバッチと呼ぶ.</p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">1-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#1-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
+<h3 id="4-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">4-2 &#23455;&#35013;&#28436;&#32722;&#32080;&#26524;<a class="anchor-link" href="#4-2-&#23455;&#35013;&#28436;&#32722;&#32080;&#26524;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<p><a href="exercise/1_1_forward_propagation.html">1_1_forward_propagation</a></p>
-<p><a href="exercise/1_1_forward_propagation_after.html">1_1_forward_propagation_after</a></p>
+<p><a href="exercise/1_3_stochastic_gradient_descent.html">1_3_stochastic_gradient_descent</a></p>
 
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h3 id="1-3-&#32771;&#23519;&#12394;&#12393;">1-3 &#32771;&#23519;&#12394;&#12393;<a class="anchor-link" href="#1-3-&#32771;&#23519;&#12394;&#12393;">&#182;</a></h3>
+<h3 id="4-3-&#32771;&#23519;&#12394;&#12393;">4-3 &#32771;&#23519;&#12394;&#12393;<a class="anchor-link" href="#4-3-&#32771;&#23519;&#12394;&#12393;">&#182;</a></h3>
 </div>
 </div>
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
-<h4 id="&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;<a class="anchor-link" href="#&#19975;&#33021;&#36817;&#20284;&#23450;&#29702;&#12395;&#12388;&#12356;&#12390;">&#182;</a></h4><p>講義では万能近似定理（Universal approximatin theorem）に触れていた.</p>
-<ul>
-<li>Hornik et al., 1989<ul>
-<li>Multilayer feedforward networks are universal approximators</li>
-</ul>
-</li>
-<li>Cybenko, 1989<ul>
-<li>Approximation by superpositions of a sigmoidal function</li>
-</ul>
-</li>
-</ul>
-<p>多層パーセプトロンが任意の関数を近似できることが示されている. 
-外部資料として次の動画が挙げていた.</p>
-<ul>
-<li>Carnegie Mellon University Deep Learning<ul>
-<li><a href="https://www.youtube.com/watch?v=lkha188L4Gs">Lecture 2 | The Universal Approximation Theorem</a></li>
-</ul>
-</li>
-</ul>
-<p>一方で, 学習モデルに任意の関数を近似する能力があるからといって, 実際に学習させてみたときに観察される高い汎化性能を説明したことにはならない. この点については近年諸説提案されており研究が盛り上がっている. 例えば</p>
-<ul>
-<li>Jonathan Frankle, Michael Carbin<ul>
-<li>The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks</li>
-<li><a href="https://arxiv.org/abs/1803.03635">arXiv:1803.03635</a></li>
-</ul>
-</li>
-</ul>
-<p>最近出版された和書として以下がある.</p>
-<ul>
-<li>今泉允聡<ul>
-<li>深層学習の原理に迫る</li>
-<li>岩波科学ライブラリー 303</li>
-<li>刊行日 2021/04/16</li>
-</ul>
-</li>
-</ul>
+<p>単に確率的勾配降下法（SGD）というと学習パラメータの更新分をシンプルに勾配のマイナスにするものを指す. それに対して前回の更新量を用いて今回の更新量を調整する様々な派生アルゴリズムが提案されている. その中でもAdamという手法がよく使われる. これらに関しては後のセクションでも触れるであろう. 他には勾配にかけるパラメータ（学習係数）をエポックによって変化させる手法も論文ではよく見かける.</p>
 
 </div>
 </div>
