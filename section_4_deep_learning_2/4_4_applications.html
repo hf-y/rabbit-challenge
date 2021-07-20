@@ -14259,6 +14259,7 @@ a.anchor-link {
 <div class="jp-Cell-inputWrapper"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput " data-mime-type="text/markdown">
 <p>ここではWaveNetを紹介する. WaveNetは音声認識などのタスクのために開発された深層学習モデルである. これによって音声合成の技術が進化し, より自然な音声を合成できるようになった. 開発元はAlphaGoを作ったDeepMind.</p>
+<p>特徴は音声という系列データなのにRNNを用いていないことである. 代わりにDilated Causal ConvolutionsというCNNを用いている. 層が深くなるにしたがって畳み込みを行うデータの時系列方向の間隔を倍にしている. また未来の情報を取り込まないように, ある層への入力は過去のデータのみにしている.</p>
 
 </div>
 </div>
